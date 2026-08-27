@@ -14,7 +14,8 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "desktop:dev": "concurrently -k \"pnpm dev\" \"wait-on http://localhost:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron electron/main.cjs\"",
-    "desktop:package": "pnpm build && electron-builder --win nsis portable --publish never",
+    "desktop:package": "pnpm build && electron-builder --win portable --publish never",
+    "desktop:package:installer": "pnpm build && electron-builder --win nsis --publish never",
     "desktop:package:dir": "pnpm build && electron-builder --win dir --publish never",
     "desktop:validate": "node scripts/validate-desktop-config.mjs"
   },

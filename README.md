@@ -53,7 +53,7 @@ The development shell opens the local Vite URL. The packaged shell loads `dist/p
 
 ## Windows packaging
 
-Build Windows NSIS and portable artifacts on Windows:
+Build the ready-to-run portable Windows executable on Windows:
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -61,7 +61,7 @@ pnpm desktop:validate
 pnpm desktop:package
 ```
 
-The package configuration writes releases into `release/` and creates an installer plus a portable executable. The CI workflow uses the same commands and packages the artifacts into `dynamo-exporter-windows.zip`.
+The primary package configuration writes a single portable executable into `release/`. The CI workflow uses this command and packages the result into `dynamo-exporter-windows.zip`. If you prefer a conventional installer, run `pnpm desktop:package:installer`; it creates an NSIS installer in the same `release/` directory.
 
 For a directory-only smoke test:
 
