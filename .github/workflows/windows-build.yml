@@ -35,8 +35,11 @@ jobs:
       - name: Validate desktop configuration
         run: pnpm desktop:validate
 
-      - name: Build Windows installer and portable executable
-        run: pnpm desktop:package
+      - name: Build offline web bundle
+        run: pnpm build
+
+      - name: Package Windows NSIS installer
+        run: pnpm exec electron-builder --win nsis --publish never
 
       - name: Create release ZIP
         shell: pwsh

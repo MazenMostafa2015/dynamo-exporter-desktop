@@ -61,7 +61,7 @@ pnpm desktop:validate
 pnpm desktop:package
 ```
 
-The primary package configuration writes a single portable executable into `release/`. The CI workflow uses this command and packages the result into `dynamo-exporter-windows.zip`. If you prefer a conventional installer, run `pnpm desktop:package:installer`; it creates an NSIS installer in the same `release/` directory.
+The primary local package configuration writes a single portable executable into `release/`. The CI workflow builds a single NSIS installer and packages it into `dynamo-exporter-windows.zip`. If you prefer the portable executable locally, run `pnpm desktop:package`; for a conventional installer, run `pnpm desktop:package:installer`.
 
 For a directory-only smoke test:
 
