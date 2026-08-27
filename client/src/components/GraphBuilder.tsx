@@ -3,19 +3,23 @@
 import { useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
+  Bookmark,
   Check,
   ChevronDown,
   Clipboard,
   Code2,
   Download,
   FileJson,
+  FolderOpen,
   Info,
   Link2,
   Loader2,
+  Pencil,
   Plus,
   RefreshCw,
   Search,
   ShieldCheck,
+  SlidersHorizontal,
   Trash2,
   Upload,
   WandSparkles,
@@ -59,7 +63,11 @@ import {
   removeConnection,
   removeNode,
   replaceNode,
+  readStoredTemplates,
   requestLlmScenario,
+  renameStoredTemplate,
+  saveStoredTemplate,
+  deleteStoredTemplate,
   scenarioStats,
   storeApiKey,
   validateAndNormalize,
@@ -67,14 +75,25 @@ import {
   type GraphNodeSpec,
   type GraphScenario,
   type NodeKind,
+  type StoredGraphTemplate,
 } from "@/lib/dyn-exporter";
 
-const TEMPLATE_META: Array<{ key: keyof typeof exampleScenarios; title: string; eyebrow: string; description: string }> = [
-  { key: "rooms", title: "Renumber rooms", eyebrow: "Write-back", description: "Level filter → north/south sort → Number parameter" },
-  { key: "doors", title: "Export wide doors", eyebrow: "Data prep", description: "Width filter → schedule-ready dataset" },
-  { key: "grids", title: "Place columns", eyebrow: "Geometry", description: "Grid curves → intersections → placement" },
+type TemplateCategory = "all" | "Rooms" | "Schedules" | "Sheets" | "Parameters" | "Geometry" | "Placement";
+
+type TemplateMeta = { key: keyof typeof exampleScenarios; title: string; eyebrow: string; description: string; category: Exclude<TemplateCategory, "all">; keywords: string };
+
+const TEMPLATE_META: TemplateMeta[] = [
+  { key: "rooms", title: "Renumber rooms", eyebrow: "Write-back", description: "Level filter → north/south sort → Number parameter", category: "Rooms", keywords: "room renumber level number write-back" },
+  { key: "doors", title: "Export wide doors", eyebrow: "Data prep", description: "Width filter → schedule-ready dataset", category: "Schedules", keywords: "door width excel schedule export" },
+  { key: "grids", title: "Place columns", eyebrow: "Placement", description: "Grid curves → intersections → placement", category: "Placement", keywords: "grid column intersection family placement" },
+  { key: "schedules", title: "Audit schedules", eyebrow: "Review", description: "Schedule views → names and types → review table", category: "Schedules", keywords: "schedule audit names types table" },
+  { key: "sheets", title: "Index sheets", eyebrow: "Documentation", description: "Sheet number → name → issue status", category: "Sheets", keywords: "sheet title block index issue documentation" },
+  { key: "parameters", title: "Audit parameters", eyebrow: "Data prep", description: "Wall Mark + Comments → review rows", category: "Parameters", keywords: "parameter mark comments wall read audit" },
+  { key: "wallGeometry", title: "Offset wall surfaces", eyebrow: "Geometry", description: "Wall curves → finish offsets → coordination surfaces", category: "Geometry", keywords: "wall curve offset surface geometry coordination" },
+  { key: "roomGeometry", title: "Room centroid points", eyebrow: "Geometry", description: "Room locations → centroid points → downstream geometry", category: "Geometry", keywords: "room location centroid point geometry" },
 ];
 
+const TEMPLATE_CATEGORIES: TemplateCategory[] = ["all", "Rooms", "Schedules", "Sheets", "Parameters", "Geometry", "Placement"];
 const TYPE_OPTIONS: NodeKind[] = ["query", "core", "action", "python"];
 
 function shortId(id: string): string {
@@ -128,6 +147,13 @@ export default function GraphBuilder() {
   const [notice, setNotice] = useState("Room renumbering template loaded. Inspect the graph before exporting.");
   const [showJson, setShowJson] = useState(false);
   const [showKey, setShowKey] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templateCategory, setTemplateCategory] = useState<TemplateCategory>("all");
+  const [nodeSearch, setNodeSearch] = useState("");
+  const [nodeKindFilter, setNodeKindFilter] = useState<"all" | NodeKind>("all");
+  const [savedTemplates, setSavedTemplates] = useState<StoredGraphTemplate[]>(() => readStoredTemplates());
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState("");
   const [activePanel, setActivePanel] = useState<"build" | "inspect">("build");
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -140,6 +166,22 @@ export default function GraphBuilder() {
   const targetNode = scenario.nodes.find((node) => node.id === targetId);
   const sourcePorts = sourceNode ? outputNames(sourceNode) : [];
   const targetPorts = targetNode ? inputNames(targetNode) : [];
+  const visibleTemplates = useMemo(() => {
+    const query = templateSearch.trim().toLowerCase();
+    return TEMPLATE_META.filter((template) => {
+      const categoryMatches = templateCategory === "all" || template.category === templateCategory;
+      const queryMatches = !query || [template.title, template.eyebrow, template.description, template.category, template.keywords].join(" ").toLowerCase().includes(query);
+      return categoryMatches && queryMatches;
+    });
+  }, [templateCategory, templateSearch]);
+  const visibleNodes = useMemo(() => {
+    const query = nodeSearch.trim().toLowerCase();
+    return scenario.nodes.filter((node) => {
+      const kindMatches = nodeKindFilter === "all" || node.type === nodeKindFilter;
+      const queryMatches = !query || [node.id, node.title, node.code, nodeKindLabels[node.type]].join(" ").toLowerCase().includes(query);
+      return kindMatches && queryMatches;
+    });
+  }, [nodeKindFilter, nodeSearch, scenario.nodes]);
   const jsonText = useMemo(() => graphJson(scenario), [scenario]);
 
   const loadScenario = (next: GraphScenario, message: string) => {
@@ -154,6 +196,35 @@ export default function GraphBuilder() {
 
   const loadTemplate = (key: keyof typeof exampleScenarios) => {
     loadScenario(exampleScenarios[key], `Loaded deterministic ${TEMPLATE_META.find((item) => item.key === key)?.title.toLowerCase() || "workflow"} template. No network request was made.`);
+  };
+
+  const loadSavedTemplate = (template: StoredGraphTemplate) => {
+    loadScenario(template.scenario, `Loaded local template “${template.name}”. No network request was made.`);
+  };
+
+  const saveCurrentTemplate = () => {
+    const name = templateName.trim() || window.prompt("Name this local template", scenario.title.replace(/\.dyn$/i, "")) || "";
+    if (!name.trim()) {
+      setNotice("Enter a name to save this graph as a local template.");
+      return;
+    }
+    setSavedTemplates(saveStoredTemplate(name, scenario));
+    setTemplateName("");
+    setShowSaveTemplate(false);
+    setNotice(`Saved “${name.trim()}” locally. It will remain available on this device.`);
+  };
+
+  const renameCustomTemplate = (template: StoredGraphTemplate) => {
+    const name = window.prompt("Rename local template", template.name);
+    if (name === null || !name.trim()) return;
+    setSavedTemplates(renameStoredTemplate(template.id, name));
+    setNotice(`Renamed local template to “${name.trim()}”.`);
+  };
+
+  const removeCustomTemplate = (template: StoredGraphTemplate) => {
+    if (!window.confirm(`Delete the local template “${template.name}”?`)) return;
+    setSavedTemplates(deleteStoredTemplate(template.id));
+    setNotice(`Deleted “${template.name}” from local templates.`);
   };
 
   const generateGraph = async () => {
@@ -303,11 +374,24 @@ export default function GraphBuilder() {
             </Card>
 
             <div className="section-label"><span>DETERMINISTIC STARTERS</span><span className="section-rule" /></div>
+            <div className="template-discovery">
+              <label className="search-field" htmlFor="template-search"><Search size={15} /><Input id="template-search" value={templateSearch} onChange={(event) => setTemplateSearch(event.target.value)} placeholder="Search templates…" /></label>
+              <div className="filter-row" aria-label="Template categories">
+                {TEMPLATE_CATEGORIES.map((category) => <button key={category} className={`filter-chip ${templateCategory === category ? "active" : ""}`} onClick={() => setTemplateCategory(category)}>{category === "all" ? "All" : category}</button>)}
+              </div>
+            </div>
             <div className="template-stack">
-              {TEMPLATE_META.map((template) => {
+              {visibleTemplates.length ? visibleTemplates.map((template) => {
                 const active = graphFileName(scenario) === graphFileName(exampleScenarios[template.key]);
-                return <button key={template.key} className={`template-card ${active ? "active" : ""}`} onClick={() => loadTemplate(template.key)}><div className="template-topline"><span>{template.eyebrow}</span><ChevronDown size={14} className="template-arrow" /></div><strong>{template.title}</strong><small>{template.description}</small><div className="template-count">{exampleScenarios[template.key].nodes.length} Code Blocks <span>·</span> {exampleScenarios[template.key].edges.length} connections</div></button>;
-              })}
+                return <button key={template.key} className={`template-card ${active ? "active" : ""}`} onClick={() => loadTemplate(template.key)}><div className="template-topline"><span>{template.category} · {template.eyebrow}</span><ChevronDown size={14} className="template-arrow" /></div><strong>{template.title}</strong><small>{template.description}</small><div className="template-count">{exampleScenarios[template.key].nodes.length} Code Blocks <span>·</span> {exampleScenarios[template.key].edges.length} connections</div></button>;
+              }) : <div className="filtered-empty"><Search size={15} /><span>No templates match this search.</span><button className="text-button" onClick={() => { setTemplateSearch(""); setTemplateCategory("all"); }}>Clear filters</button></div>}
+            </div>
+
+            <div className="saved-template-section">
+              <div className="section-label"><span>MY LOCAL TEMPLATES</span><span className="section-rule" /></div>
+              <Button variant="outline" size="sm" onClick={() => { setTemplateName(scenario.title.replace(/\.dyn$/i, "")); setShowSaveTemplate(true); }}><Bookmark size={14} /> Save current graph</Button>
+              {showSaveTemplate && <div className="save-template-form"><Input value={templateName} onChange={(event) => setTemplateName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") saveCurrentTemplate(); }} placeholder="Template name" aria-label="Local template name" autoFocus /><div><Button size="sm" onClick={saveCurrentTemplate}>Save</Button><Button size="sm" variant="ghost" onClick={() => setShowSaveTemplate(false)}>Cancel</Button></div></div>}
+              {savedTemplates.length ? <div className="saved-template-stack">{savedTemplates.map((template) => <div className="saved-template-row" key={template.id}><button className="saved-template-load" onClick={() => loadSavedTemplate(template)}><FolderOpen size={14} /><span><strong>{template.name}</strong><small>{template.scenario.nodes.length} nodes · saved {new Date(template.createdAt).toLocaleDateString()}</small></span></button><div className="saved-template-actions"><button onClick={() => renameCustomTemplate(template)} aria-label={`Rename ${template.name}`} title="Rename"><Pencil size={13} /></button><button onClick={() => removeCustomTemplate(template)} aria-label={`Delete ${template.name}`} title="Delete"><Trash2 size={13} /></button></div></div>)}</div> : <p className="muted-copy saved-empty">Save a graph here to reuse your own workflow later.</p>}
             </div>
 
             <div className="sidebar-actions">
@@ -356,7 +440,7 @@ export default function GraphBuilder() {
             </Card>
 
             <div className="workspace-bottom">
-              <Card className="node-list-card"><div className="card-heading-row"><div><div className="card-kicker"><Code2 size={14} /> NODE STACK</div><h3>{graphNodeCount(scenario)} Code Blocks</h3></div><Button size="sm" onClick={addNode}><Plus size={14} /> Add node</Button></div><div className="node-list">{scenario.nodes.map((node) => <button key={node.id} className={`node-list-row ${selectedId === node.id ? "selected" : ""}`} onClick={() => setSelectedId(node.id)}><span className="node-type-bar" style={{ backgroundColor: nodeColors[node.type].stroke }} /><span className="node-list-copy"><strong>{node.title}</strong><small>{shortId(node.id)} · {nodeKindLabels[node.type]} · {graphNodeStatus(node, scenario)}</small></span><span className="node-list-code">{node.code}</span><ChevronDown size={14} /></button>)}</div></Card>
+              <Card className="node-list-card"><div className="card-heading-row"><div><div className="card-kicker"><Code2 size={14} /> NODE STACK</div><h3>{graphNodeCount(scenario)} Code Blocks</h3></div><Button size="sm" onClick={addNode}><Plus size={14} /> Add node</Button></div><div className="node-discovery"><label className="search-field" htmlFor="node-search"><Search size={15} /><Input id="node-search" value={nodeSearch} onChange={(event) => setNodeSearch(event.target.value)} placeholder="Search nodes, code, or IDs…" /></label><label className="node-filter-label" htmlFor="node-kind-filter"><SlidersHorizontal size={14} /><select id="node-kind-filter" value={nodeKindFilter} onChange={(event) => setNodeKindFilter(event.target.value as "all" | NodeKind)}><option value="all">All node types</option>{TYPE_OPTIONS.map((type) => <option key={type} value={type}>{nodeKindLabels[type]}</option>)}</select></label></div><div className="node-list">{visibleNodes.length ? visibleNodes.map((node) => <button key={node.id} className={`node-list-row ${selectedId === node.id ? "selected" : ""}`} onClick={() => setSelectedId(node.id)}><span className="node-type-bar" style={{ backgroundColor: nodeColors[node.type].stroke }} /><span className="node-list-copy"><strong>{node.title}</strong><small>{shortId(node.id)} · {nodeKindLabels[node.type]} · {graphNodeStatus(node, scenario)}</small></span><span className="node-list-code">{node.code}</span><ChevronDown size={14} /></button>) : <div className="filtered-empty node-empty"><Search size={15} /><span>No nodes match these filters.</span><button className="text-button" onClick={() => { setNodeSearch(""); setNodeKindFilter("all"); }}>Clear filters</button></div>}</div></Card>
               <div className="inspector-column">
                 <Card className="inspector-card"><div className="card-heading-row"><div><div className="card-kicker"><Code2 size={14} /> INSPECTOR</div><h3>{selectedNode?.title || "Select a node"}</h3></div>{selectedNode && <button className="icon-button danger" onClick={deleteSelected} aria-label="Delete selected node"><Trash2 size={15} /></button>}</div>{selectedNode ? <div className="inspector-form"><label>Title<Input value={selectedNode.title} onChange={(event) => updateSelected({ title: event.target.value })} /></label><label>Node type<select value={selectedNode.type} onChange={(event) => updateSelected({ type: event.target.value as NodeKind })}>{TYPE_OPTIONS.map((type) => <option key={type} value={type}>{nodeKindLabels[type]}</option>)}</select></label><label>DesignScript code<Textarea value={selectedNode.code} onChange={(event) => updateSelected({ code: event.target.value })} rows={4} className="code-editor" /></label><div className="port-readout"><span>Inputs <strong>{inputNames(selectedNode).join(", ") || "—"}</strong></span><span>Outputs <strong>{outputNames(selectedNode).join(", ") || "—"}</strong></span></div></div> : <p className="muted-copy">Choose a node in the stack or on the canvas to edit its Code Block.</p>}</Card>
                 <Card className="connection-card"><div className="card-heading-row"><div><div className="card-kicker"><Link2 size={14} /> CONNECT NODES</div><h3>Explicit wiring</h3></div></div><p className="muted-copy connection-help">Choose ports when variable-name matching is not enough.</p><div className="connection-form"><label>Source node<select value={sourceId} onChange={(event) => { setSourceId(event.target.value); setSourcePort(""); }}>{<option value="">Choose source…</option>}{scenario.nodes.map((node) => <option key={node.id} value={node.id}>{node.title}</option>)}</select></label><label>Output port<select value={sourcePort} onChange={(event) => setSourcePort(event.target.value)} disabled={!sourceNode}><option value="">Auto-match output…</option>{sourcePorts.map((port) => <option key={port} value={port}>{port}</option>)}</select></label><label>Target node<select value={targetId} onChange={(event) => { setTargetId(event.target.value); setTargetPort(""); }}><option value="">Choose target…</option>{scenario.nodes.map((node) => <option key={node.id} value={node.id}>{node.title}</option>)}</select></label><label>Input port<select value={targetPort} onChange={(event) => setTargetPort(event.target.value)} disabled={!targetNode}><option value="">Auto-match input…</option>{targetPorts.map((port) => <option key={port} value={port}>{port}</option>)}</select></label><Button size="sm" onClick={addExplicitConnection} disabled={!sourceNode || !targetNode}><Link2 size={14} /> Add connection</Button></div><div className="connection-list">{scenario.edges.length ? scenario.edges.map((edge, index) => <div className="connection-row" key={`${edgeKeyForUi(edge)}-${index}`}><span><strong>{edge.from}</strong> <em>{edge.fromPort || "output"} → {edge.toPort || "input"}</em> <strong>{edge.to}</strong></span><button onClick={() => deleteConnection(edge)} aria-label={`Remove connection ${edge.from} to ${edge.to}`}><X size={13} /></button></div>) : <p className="muted-copy">No connections yet.</p>}</div></Card>

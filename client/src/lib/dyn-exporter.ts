@@ -425,13 +425,124 @@ export const exampleScenarios: Record<string, GraphScenario> = {
       { from: "n4", to: "n5", fromPort: "points", toPort: "points" },
     ],
   },
+  schedules: {
+    title: "audit_revit_schedules.dyn",
+    description: "Collect Revit schedules, read their names and types, and prepare a review table without changing the model.",
+    author: "Dynamo Exporter Tool",
+    nodes: [
+      { id: "n1", title: "Schedule views", type: "query", code: "schedules = Document.Current.Schedules;", x: 60, y: 120 },
+      { id: "n2", title: "Schedule names", type: "core", code: 'scheduleNames = Element.GetParameterValueByName(schedules, "Name");', x: 330, y: 60 },
+      { id: "n3", title: "Schedule types", type: "core", code: 'scheduleTypes = Element.GetParameterValueByName(schedules, "ScheduleType");', x: 330, y: 210 },
+      { id: "n4", title: "Review rows", type: "core", code: "rows = DSCore.List.Create(scheduleNames, scheduleTypes);", x: 620, y: 120 },
+      { id: "n5", title: "Column headers", type: "core", code: 'headers = ["Schedule Name", "Schedule Type"];', x: 620, y: 330 },
+      { id: "n6", title: "Schedule table", type: "core", code: "table = List.Transpose([headers, rows]);", x: 910, y: 180 },
+      { id: "n7", title: "Audit output", type: "core", code: "review = table;", x: 1200, y: 180 },
+    ],
+    edges: [
+      { from: "n1", to: "n2", fromPort: "schedules", toPort: "schedules" },
+      { from: "n1", to: "n3", fromPort: "schedules", toPort: "schedules" },
+      { from: "n2", to: "n4", fromPort: "scheduleNames", toPort: "scheduleNames" },
+      { from: "n3", to: "n4", fromPort: "scheduleTypes", toPort: "scheduleTypes" },
+      { from: "n4", to: "n6", fromPort: "rows", toPort: "rows" },
+      { from: "n5", to: "n6", fromPort: "headers", toPort: "headers" },
+      { from: "n6", to: "n7", fromPort: "table", toPort: "table" },
+    ],
+  },
+  sheets: {
+    title: "audit_sheet_index.dyn",
+    description: "Collect drawing sheets and build a reviewable index from sheet number, name, and issue status.",
+    author: "Dynamo Exporter Tool",
+    nodes: [
+      { id: "n1", title: "Sheets category", type: "query", code: 'sheetCat = Categories.ByName("OST_Sheets");', x: 60, y: 120 },
+      { id: "n2", title: "Sheet elements", type: "query", code: "sheets = AllElementsOfCategory(sheetCat);", x: 330, y: 120 },
+      { id: "n3", title: "Sheet numbers", type: "core", code: 'numbers = Element.GetParameterValueByName(sheets, "Sheet Number");', x: 600, y: 30 },
+      { id: "n4", title: "Sheet names", type: "core", code: 'names = Element.GetParameterValueByName(sheets, "Sheet Name");', x: 600, y: 180 },
+      { id: "n5", title: "Issue status", type: "core", code: 'statuses = Element.GetParameterValueByName(sheets, "Sheet Issue Date");', x: 600, y: 330 },
+      { id: "n6", title: "Sheet index rows", type: "core", code: "rows = DSCore.List.Create(numbers, names, statuses);", x: 900, y: 160 },
+      { id: "n7", title: "Review output", type: "core", code: "review = rows;", x: 1200, y: 160 },
+    ],
+    edges: [
+      { from: "n1", to: "n2", fromPort: "sheetCat", toPort: "sheetCat" },
+      { from: "n2", to: "n3", fromPort: "sheets", toPort: "sheets" },
+      { from: "n2", to: "n4", fromPort: "sheets", toPort: "sheets" },
+      { from: "n2", to: "n5", fromPort: "sheets", toPort: "sheets" },
+      { from: "n3", to: "n6", fromPort: "numbers", toPort: "numbers" },
+      { from: "n4", to: "n6", fromPort: "names", toPort: "names" },
+      { from: "n5", to: "n6", fromPort: "statuses", toPort: "statuses" },
+      { from: "n6", to: "n7", fromPort: "rows", toPort: "rows" },
+    ],
+  },
+  parameters: {
+    title: "audit_wall_parameters.dyn",
+    description: "Read wall Mark and Comments parameters and assemble a review table without writing to the model.",
+    author: "Dynamo Exporter Tool",
+    nodes: [
+      { id: "n1", title: "Walls category", type: "query", code: 'cat = Categories.ByName("OST_Walls");', x: 60, y: 120 },
+      { id: "n2", title: "Wall elements", type: "query", code: "walls = AllElementsOfCategory(cat);", x: 330, y: 120 },
+      { id: "n3", title: "Mark values", type: "core", code: 'marks = Element.GetParameterValueByName(walls, "Mark");', x: 600, y: 40 },
+      { id: "n4", title: "Comments values", type: "core", code: 'comments = Element.GetParameterValueByName(walls, "Comments");', x: 600, y: 210 },
+      { id: "n5", title: "Parameter rows", type: "core", code: "rows = DSCore.List.Create(marks, comments);", x: 900, y: 120 },
+      { id: "n6", title: "Review output", type: "core", code: "review = rows;", x: 1200, y: 120 },
+    ],
+    edges: [
+      { from: "n1", to: "n2", fromPort: "cat", toPort: "cat" },
+      { from: "n2", to: "n3", fromPort: "walls", toPort: "walls" },
+      { from: "n2", to: "n4", fromPort: "walls", toPort: "walls" },
+      { from: "n3", to: "n5", fromPort: "marks", toPort: "marks" },
+      { from: "n4", to: "n5", fromPort: "comments", toPort: "comments" },
+      { from: "n5", to: "n6", fromPort: "rows", toPort: "rows" },
+    ],
+  },
+  wallGeometry: {
+    title: "wall_offset_surfaces.dyn",
+    description: "Collect wall location curves, create finish offsets, and generate review geometry for coordination.",
+    author: "Dynamo Exporter Tool",
+    nodes: [
+      { id: "n1", title: "Walls category", type: "query", code: 'cat = Categories.ByName("OST_Walls");', x: 60, y: 120 },
+      { id: "n2", title: "Wall elements", type: "query", code: "walls = AllElementsOfCategory(cat);", x: 330, y: 120 },
+      { id: "n3", title: "Wall curves", type: "core", code: "curves = Element.GetLocation(walls);", x: 600, y: 120 },
+      { id: "n4", title: "Finish offsets", type: "core", code: "offsetCurves = Curve.Offset(curves, 150);", x: 870, y: 120 },
+      { id: "n5", title: "Coordination surfaces", type: "core", code: "surfaces = Surface.ByPatch(offsetCurves);", x: 1140, y: 120 },
+      { id: "n6", title: "Geometry output", type: "core", code: "review = surfaces;", x: 1410, y: 120 },
+    ],
+    edges: [
+      { from: "n1", to: "n2", fromPort: "cat", toPort: "cat" },
+      { from: "n2", to: "n3", fromPort: "walls", toPort: "walls" },
+      { from: "n3", to: "n4", fromPort: "curves", toPort: "curves" },
+      { from: "n4", to: "n5", fromPort: "offsetCurves", toPort: "offsetCurves" },
+      { from: "n5", to: "n6", fromPort: "surfaces", toPort: "surfaces" },
+    ],
+  },
+  roomGeometry: {
+    title: "room_centroid_points.dyn",
+    description: "Collect rooms, read their locations, and prepare centroid points for downstream geometry or tagging workflows.",
+    author: "Dynamo Exporter Tool",
+    nodes: [
+      { id: "n1", title: "Rooms category", type: "query", code: 'cat = Categories.ByName("OST_Rooms");', x: 60, y: 120 },
+      { id: "n2", title: "Room elements", type: "query", code: "rooms = AllElementsOfCategory(cat);", x: 330, y: 120 },
+      { id: "n3", title: "Room locations", type: "core", code: "locations = Element.GetLocation(rooms);", x: 600, y: 120 },
+      { id: "n4", title: "Centroid points", type: "core", code: "points = Point.ByCoordinates(locations.X, locations.Y, locations.Z);", x: 870, y: 120 },
+      { id: "n5", title: "Geometry output", type: "core", code: "review = points;", x: 1140, y: 120 },
+    ],
+    edges: [
+      { from: "n1", to: "n2", fromPort: "cat", toPort: "cat" },
+      { from: "n2", to: "n3", fromPort: "rooms", toPort: "rooms" },
+      { from: "n3", to: "n4", fromPort: "locations", toPort: "locations" },
+      { from: "n4", to: "n5", fromPort: "points", toPort: "points" },
+    ],
+  },
 };
 
 export function generateOfflineScenario(prompt: string): { scenario: GraphScenario; matchedTemplate: string | null } {
   const normalized = prompt.toLowerCase();
+  if (normalized.includes("schedule")) return { scenario: clone(exampleScenarios.schedules), matchedTemplate: "schedules" };
+  if (normalized.includes("sheet") || normalized.includes("title block")) return { scenario: clone(exampleScenarios.sheets), matchedTemplate: "sheets" };
+  if (normalized.includes("parameter") || normalized.includes("mark") || normalized.includes("comments")) return { scenario: clone(exampleScenarios.parameters), matchedTemplate: "parameters" };
+  if (normalized.includes("wall") || normalized.includes("offset") || normalized.includes("surface")) return { scenario: clone(exampleScenarios.wallGeometry), matchedTemplate: "wallGeometry" };
   if (normalized.includes("room") || normalized.includes("renumber")) return { scenario: clone(exampleScenarios.rooms), matchedTemplate: "rooms" };
-  if (normalized.includes("door") || normalized.includes("excel") || normalized.includes("schedule")) return { scenario: clone(exampleScenarios.doors), matchedTemplate: "doors" };
+  if (normalized.includes("door") || normalized.includes("excel")) return { scenario: clone(exampleScenarios.doors), matchedTemplate: "doors" };
   if (normalized.includes("grid") || normalized.includes("column")) return { scenario: clone(exampleScenarios.grids), matchedTemplate: "grids" };
+  if (normalized.includes("geometry") || normalized.includes("point") || normalized.includes("centroid")) return { scenario: clone(exampleScenarios.roomGeometry), matchedTemplate: "roomGeometry" };
 
   const category = normalized.includes("wall") ? "OST_Walls" : normalized.includes("window") ? "OST_Windows" : normalized.includes("floor") ? "OST_Floors" : "OST_GenericModel";
   return {
@@ -479,6 +590,57 @@ export function readStoredApiKey(): string {
 
 export function storeApiKey(value: string): void {
   try { value ? localStorage.setItem("dynamo-exporter-anthropic-api-key", value) : localStorage.removeItem("dynamo-exporter-anthropic-api-key"); } catch { /* optional browser storage */ }
+}
+
+export interface StoredGraphTemplate {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  scenario: GraphScenario;
+}
+
+const CUSTOM_TEMPLATE_STORAGE_KEY = "dynamo-exporter-custom-templates";
+
+export function readStoredTemplates(): StoredGraphTemplate[] {
+  try {
+    const raw = localStorage.getItem(CUSTOM_TEMPLATE_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((item) => {
+      if (!item || typeof item !== "object") return [];
+      const value = item as Partial<StoredGraphTemplate>;
+      if (!value.id || !value.name || !value.scenario) return [];
+      return [{ id: String(value.id), name: String(value.name), description: String(value.description || "Saved locally"), createdAt: String(value.createdAt || new Date().toISOString()), scenario: clone(value.scenario) }];
+    });
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredTemplates(templates: StoredGraphTemplate[]): void {
+  try { localStorage.setItem(CUSTOM_TEMPLATE_STORAGE_KEY, JSON.stringify(templates)); } catch { /* optional browser storage */ }
+}
+
+export function saveStoredTemplate(name: string, scenario: GraphScenario): StoredGraphTemplate[] {
+  const cleanName = name.trim() || scenario.title.replace(/\.dyn$/i, "") || "Saved graph";
+  const saved: StoredGraphTemplate = { id: generateUuid(), name: cleanName, description: scenario.description, createdAt: new Date().toISOString(), scenario: clone(scenario) };
+  const next = [saved, ...readStoredTemplates()];
+  writeStoredTemplates(next);
+  return next;
+}
+
+export function renameStoredTemplate(id: string, name: string): StoredGraphTemplate[] {
+  const next = readStoredTemplates().map((template) => template.id === id ? { ...template, name: name.trim() || template.name } : template);
+  writeStoredTemplates(next);
+  return next;
+}
+
+export function deleteStoredTemplate(id: string): StoredGraphTemplate[] {
+  const next = readStoredTemplates().filter((template) => template.id !== id);
+  writeStoredTemplates(next);
+  return next;
 }
 
 export function graphJson(scenario: GraphScenario): string {

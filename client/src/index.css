@@ -269,3 +269,44 @@ button:active { transform: scale(0.985); }
   * { @apply border-border outline-ring/50; }
   button:not(:disabled), [role="button"]:not([aria-disabled="true"]), a[href] { cursor: pointer; }
 }
+
+
+/* Design reminder: discovery controls should feel like instrument-panel affordances—quiet paper surfaces, monospace labels, and signal-violet active states. */
+.template-discovery, .node-discovery { display: grid; gap: 9px; }
+.search-field { display: flex; align-items: center; gap: 8px; min-width: 0; color: #8d8a82; background: var(--paper-warm); border: 1px solid var(--line); border-radius: 7px; padding: 0 10px; }
+.search-field:focus-within { border-color: #aaa2ee; box-shadow: 0 0 0 3px rgba(104, 91, 214, 0.1); }
+.search-field input { min-width: 0; height: 34px; padding: 0; background: transparent; border: 0; box-shadow: none; color: var(--ink); font-size: 11px; }
+.search-field input:focus { box-shadow: none; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 5px; }
+.filter-chip { border: 1px solid var(--line); border-radius: 999px; background: var(--paper); color: #8a867d; padding: 5px 8px; font: 10px "SFMono-Regular", Consolas, monospace; transition: color 160ms ease, background 160ms ease, border-color 160ms ease, transform 160ms ease; }
+.filter-chip:hover { color: var(--ink); border-color: #b5acef; transform: translateY(-1px); }
+.filter-chip.active { color: #fff; border-color: var(--signal); background: var(--signal); }
+.filtered-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 13px; border: 1px dashed #d6d1c7; border-radius: 8px; color: #928f87; background: rgba(248, 246, 241, 0.68); font-size: 11px; }
+.filtered-empty svg { color: #a49ce7; }
+.filtered-empty .text-button { margin-left: auto; }
+.saved-template-section { display: grid; gap: 10px; }
+.saved-template-section > .section-label { margin-bottom: 0; }
+.saved-template-section > button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: 100%; font-size: 11px; font-weight: 800; }
+.save-template-form { display: grid; gap: 7px; padding: 10px; background: var(--paper-warm); border: 1px solid var(--line); border-radius: 8px; }
+.save-template-form > div { display: flex; justify-content: flex-end; gap: 5px; }
+.save-template-form button { font-size: 10px; }
+.saved-template-stack { display: grid; gap: 6px; }
+.saved-template-row { display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+.saved-template-load { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; text-align: left; border: 0; background: transparent; color: var(--ink); }
+.saved-template-load > svg { flex: 0 0 auto; color: var(--signal); }
+.saved-template-load span { display: grid; gap: 3px; min-width: 0; }
+.saved-template-load strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.saved-template-load small { color: #8b887f; font: 9px "SFMono-Regular", Consolas, monospace; }
+.saved-template-actions { display: flex; gap: 3px; }
+.saved-template-actions button { display: grid; place-items: center; width: 24px; height: 24px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: #918d84; }
+.saved-template-actions button:hover { color: var(--signal-dark); border-color: #d8d1ff; background: #f2efff; }
+.saved-empty { margin-top: -2px; }
+.node-discovery { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--line); background: #faf9f5; }
+.node-filter-label { display: inline-flex; align-items: center; gap: 5px; color: #8b877e; }
+.node-filter-label select { min-height: 34px; border: 1px solid var(--line); border-radius: 7px; background: var(--paper); color: var(--ink); padding: 0 9px; font-size: 10px; }
+.node-empty { margin: 12px 15px; }
+@media (max-width: 700px) {
+  .node-discovery { grid-template-columns: 1fr; }
+  .node-filter-label select { width: 100%; }
+  .node-filter-label { width: 100%; }
+}

@@ -1,18 +1,14 @@
-# Dynamo Exporter Desktop — Task Checklist
+# Dynamo Exporter Expansion — Task Checklist
 
-- [ ] Inspect the current web application and select Electron or Tauri based on Windows build feasibility.
-- [ ] Add a desktop shell while preserving the offline graph builder and optional LLM mode.
-- [ ] Add Windows packaging scripts and a GitHub Actions Windows build workflow.
-- [ ] Add a public-project README, license, and Node/Electron/Tauri ignore rules.
-- [ ] Build and validate the web bundle and desktop packaging configuration.
-- [ ] Create the reusable skill using skill-creator initialization, authoring, and validation.
-- [ ] Create the public GitHub repository and push the complete source.
-- [ ] Trigger the Windows build and retrieve the executable/installer artifact.
-- [ ] Package the Windows artifact and source metadata into the requested downloadable ZIP.
-- [ ] Deliver the repository URL, desktop ZIP, and reusable skill.
+- [ ] Inspect the existing scenario/template types and graph-builder render structure.
+- [x] Add deterministic templates for schedules, sheets, parameters, and geometry workflows.
+- [x] Add a template search/filter bar with category chips and custom-template grouping.
+- [x] Add a node search/filter bar with type/category filtering in the node stack.
+- [x] Add local custom-template save, load, rename, and delete flows using browser storage.
+- [x] Verify new templates generate deterministic graphs and remain exportable as `.dyn` JSON.
+- [x] Test search, filters, persistence, responsive behavior, and offline operation.
+- [ ] Save a checkpoint and deliver the expanded project.
 
-## Decisions to confirm during execution
+## Constraints
 
-- Prefer Electron for a practical cross-platform build unless the installed toolchain makes Tauri equally reliable.
-- Keep deterministic templates and `.dyn` serialization fully local; only LLM mode may call an external endpoint after explicit user action.
-- A Windows-native artifact must be built on a Windows runner or equivalent; if the sandbox cannot produce a trustworthy `.exe`, use GitHub Actions and retrieve its artifact.
+All deterministic templates, search/filtering, and custom-template persistence must work without a network connection. No customer reviews, ratings, or fabricated testimonials are used. Keep the focused desktop-utility visual language: deep graphite workspace, warm paper panels, blue-violet accent, monospace code surfaces, and compact operational controls.
