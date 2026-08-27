@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "main": "electron/main.cjs",
+  "description": "Offline-first Dynamo .dyn graph builder for AEC automation workflows.",
+  "author": "Mostafa Zeada",
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
@@ -12,8 +14,8 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "desktop:dev": "concurrently -k \"pnpm dev\" \"wait-on http://localhost:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron electron/main.cjs\"",
-    "desktop:package": "pnpm build && electron-builder --win nsis portable",
-    "desktop:package:dir": "pnpm build && electron-builder --win dir",
+    "desktop:package": "pnpm build && electron-builder --win nsis portable --publish never",
+    "desktop:package:dir": "pnpm build && electron-builder --win dir --publish never",
     "desktop:validate": "node scripts/validate-desktop-config.mjs"
   },
   "dependencies": {
