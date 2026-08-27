@@ -110,8 +110,7 @@
       "target": [
         { "target": "nsis", "arch": ["x64"] },
         { "target": "portable", "arch": ["x64"] }
-      ],
-      "publisherName": "Mostafa Zeada"
+      ]
     },
     "nsis": {
       "oneClick": false,
