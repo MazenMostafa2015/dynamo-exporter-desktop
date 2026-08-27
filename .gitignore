@@ -111,3 +111,23 @@ temp/
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
 .project-config.json
+
+# Electron / Windows packaging
+release/
+electron-build/
+*.exe
+*.msi
+*.dmg
+*.app
+*.deb
+*.rpm
+*.blockmap
+*.snap
+*.AppImage
+
+# Local offline packaging and smoke-test artifacts
+offline-package/
+*-offline.zip
+README_OFFLINE.md
+offline-test-notes.md
+validate-dyn.mjs

@@ -2,14 +2,19 @@
   "name": "dynamo-exporter-docs",
   "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
-    "build": "VITE_OFFLINE_BUILD=true vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && node postbuild-offline.mjs",
+    "build": "cross-env VITE_OFFLINE_BUILD=true vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && node postbuild-offline.mjs",
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "desktop:dev": "concurrently -k \"pnpm dev\" \"wait-on http://localhost:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron electron/main.cjs\"",
+    "desktop:package": "pnpm build && electron-builder --win nsis portable",
+    "desktop:package:dir": "pnpm build && electron-builder --win dir",
+    "desktop:validate": "node scripts/validate-desktop-config.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -76,6 +81,10 @@
     "@vitejs/plugin-react": "^5.0.4",
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",
+    "concurrently": "^10.0.5",
+    "cross-env": "^10.1.0",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3",
     "esbuild": "^0.25.0",
     "pnpm": "^10.15.1",
     "postcss": "^8.4.47",
@@ -86,7 +95,32 @@
     "typescript": "5.6.3",
     "vite": "^7.1.7",
     "vite-plugin-manus-runtime": "^0.0.58",
-    "vitest": "^2.1.4"
+    "vitest": "^2.1.4",
+    "wait-on": "^9.1.0"
+  },
+  "build": {
+    "appId": "com.mostafazeada.dynamoexporter",
+    "productName": "Dynamo Exporter",
+    "artifactName": "Dynamo-Exporter-${version}-${arch}.${ext}",
+    "asar": true,
+    "compression": "maximum",
+    "files": ["dist/public/**/*", "electron/**/*", "package.json"],
+    "directories": { "output": "release" },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ],
+      "publisherName": "Mostafa Zeada"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Dynamo Exporter"
+    },
+    "portable": { "artifactName": "Dynamo-Exporter-${version}-portable.${ext}" }
   },
   "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
   "pnpm": {
