@@ -131,3 +131,7 @@ offline-package/
 README_OFFLINE.md
 offline-test-notes.md
 validate-dyn.mjs
+windows-artifact/
+windows-artifact-final/
+windows-download/
+Dynamo-Exporter-Desktop-Windows.zip
