@@ -1,6 +1,6 @@
 {
   "name": "dynamo-exporter-docs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "electron/main.cjs",
   "description": "Offline-first Dynamo .dyn graph builder for AEC automation workflows.",

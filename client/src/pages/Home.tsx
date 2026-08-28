@@ -16,9 +16,14 @@ export default function Home() {
             </div>
             <h1 className="text-xl font-bold text-gray-900">Dynamo Exporter</h1>
           </div>
-          <Button onClick={() => setLocation("/docs")} variant="outline">
-            Documentation
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setLocation("/tool")} className="bg-blue-600 hover:bg-blue-700">
+              Build Graph
+            </Button>
+            <Button onClick={() => setLocation("/docs")} variant="outline">
+              Documentation
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -65,13 +70,13 @@ export default function Home() {
             <div className="flex gap-4 pt-4">
               <Button
                 size="lg"
-                onClick={() => setLocation("/docs")}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                onClick={() => setLocation("/tool")}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-200"
               >
-                Explore Docs <ArrowRight className="w-4 h-4 ml-2" />
+                Build Graph <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-              <Button size="lg" variant="outline">
-                View on GitHub
+              <Button size="lg" variant="outline" onClick={() => setLocation("/docs")}>
+                Explore Docs
               </Button>
             </div>
           </div>
@@ -240,13 +245,23 @@ export default function Home() {
           <p className="text-blue-100 mb-8 max-w-2xl mx-auto">
             Dive into the comprehensive documentation to learn the API, architecture, and integration patterns.
           </p>
-          <Button
-            size="lg"
-            onClick={() => setLocation("/docs")}
-            className="bg-white text-blue-600 hover:bg-blue-50"
-          >
-            View Full Documentation <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Button
+              size="lg"
+              onClick={() => setLocation("/tool")}
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              Start Building Now <Zap className="ml-2 w-4 h-4" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => setLocation("/docs")}
+              className="border-white text-white hover:bg-white/10"
+            >
+              View Full Documentation <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </section>
 
