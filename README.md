@@ -1,12 +1,12 @@
 # Dynamo Exporter Desktop
 
-Dynamo Exporter Desktop is an offline-first Windows utility for turning plain-English Revit automation ideas into reviewable Dynamo Code Block graphs and `.dyn` files. It preserves the existing React/Vite workbench while adding a thin Electron shell so the same deterministic templates, SVG graph view, node inspector, explicit port wiring, validation, JSON preview, and download flow can run as a native desktop application.
+Dynamo Exporter Desktop is an offline-first Windows utility for turning plain-English Revit automation ideas into reviewable Dynamo Code Block graphs and `.dyn` files. It preserves the existing React/Vite application—including the home route, primary `/tool` workbench, and integrated `/docs` reference route—inside a thin Electron shell so the same UI and graph workflow can run as a native desktop application.
 
 The universal-node strategy intentionally represents each generated node as a `CodeBlockNodeModel`. A DesignScript assignment such as `rooms = AllElementsOfCategory(cat);` exposes `rooms` as an output and referenced variables such as `cat` as inputs. This keeps serialization transparent and avoids pretending that one metadata table covers every Dynamo and Revit node signature.
 
 ## Features
 
-The desktop app includes deterministic offline templates for room renumbering, wide-door schedule preparation, and grid-intersection column placement. It provides manual Code Block editing, type labels for query/core/action/Python nodes, explicit source-to-target port connections, live SVG rendering, graph health diagnostics, write-action safety warnings, JSON preview, scenario JSON import, and `.dyn` download.
+The desktop app includes deterministic offline templates for room renumbering, wide-door schedule preparation, grid-intersection column placement, schedule auditing, sheet indexing, parameter auditing, wall-offset surfaces, and room centroid geometry. It provides template search with category chips, node search with type filters, local custom-template save/load/rename/delete, manual Code Block editing, explicit source-to-target port connections, live SVG rendering, graph health diagnostics, write-action safety warnings, JSON preview, scenario JSON import, and `.dyn` download.
 
 LLM assist is optional and disabled by default. When explicitly enabled, the browser renderer sends the prompt to the configured endpoint with the API key supplied by the user. Deterministic generation, editing, validation, serialization, and exporting never require network access or an API key.
 
@@ -21,7 +21,8 @@ LLM assist is optional and disabled by default. When explicitly enabled, the bro
 | `electron/preload.cjs` | Isolated preload bridge with a non-privileged runtime marker |
 | `postbuild-offline.mjs` | Converts Vite output to a deferred local IIFE entry point for direct file launch |
 | `scripts/validate-desktop-config.mjs` | Deterministic packaging configuration check used before release |
-| `.github/workflows/windows-build.yml` | Windows CI workflow that builds NSIS and portable artifacts and uploads a ZIP |
+| `.github/workflows/windows-build.yml` | Windows CI workflow that builds the NSIS installer and uploads a ZIP |
+| `client/src/pages/Documentation.tsx` | Integrated `/docs` route for the exporter reference guide |
 
 ## Requirements
 
@@ -73,9 +74,9 @@ Do not treat an unsigned build as enterprise-distributed software. Add a code-si
 
 ## Using the tool
 
-Open the `Build graph` tab, describe the automation, and choose `Offline templates` for deterministic generation. Select a starter template or generate a category starter. Click nodes in the canvas or node stack to edit titles, node type, and one-line DesignScript. The port readout updates from assigned and referenced variable names.
+Open the `Build graph` tab, describe the automation, and choose `Offline templates` for deterministic generation. Search the starter library by phrase or category, then select a workflow such as `Audit schedules`, `Index sheets`, or `Offset wall surfaces`. Click nodes in the canvas or node stack to edit titles, node type, and one-line DesignScript. The port readout updates from assigned and referenced variable names.
 
-Use `Connect nodes` in the inspector when automatic variable-name matching is not sufficient. The canvas renders each connector as a visible SVG curve, and the `Inspect & export` tab shows the node count, connector count, port counts, schema checks, and potential write actions. Download is blocked when the graph has missing IDs, empty code, or unassigned outputs.
+Use the node search field and type filter to locate a specific Code Block by title, ID, code, or kind. Use `Connect nodes` in the inspector when automatic variable-name matching is not sufficient. To reuse a customized graph, choose `Save current graph`, enter a local template name, and later load, rename, or delete it from `My local templates`; saved templates stay on this device through local storage. The canvas renders each connector as a visible SVG curve, and the `Inspect & export` tab shows the node count, connector count, port counts, schema checks, and potential write actions. Download is blocked when the graph has missing IDs, empty code, or unassigned outputs.
 
 Action nodes such as `Element.SetParameterByName` or placement calls may mutate the active Revit model. Always review the exported graph in Dynamo and test on a detached or backup model before running against production data.
 

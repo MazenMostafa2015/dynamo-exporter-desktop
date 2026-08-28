@@ -1,14 +1,18 @@
-# Dynamo Exporter Expansion — Task Checklist
+# Existing Dynamo Exporter Desktop — Verification Checklist
 
-- [x] Inspect the existing scenario/template types and graph-builder render structure.
-- [x] Add deterministic templates for schedules, sheets, parameters, and geometry workflows.
-- [x] Add a template search/filter bar with category chips and custom-template grouping.
-- [x] Add a node search/filter bar with type/category filtering in the node stack.
-- [x] Add local custom-template save, load, rename, and delete flows using browser storage.
-- [x] Verify new templates generate deterministic graphs and remain exportable as `.dyn` JSON.
-- [x] Test search, filters, persistence, responsive behavior, and offline operation.
-- [ ] Save a checkpoint and deliver the expanded project.
+- [x] Verify this repository is the existing Vite/React app with `/`, `/tool`, and `/docs` routes, not a separate documentation-only site.
+- [x] Verify `/tool` remains the primary interactive graph-builder route and `/docs` remains integrated in the same router.
+- [x] Verify the deterministic templates, search/filter controls, and local custom-template persistence are present in the existing React components.
+- [x] Verify the Electron main/preload shell loads the same React bundle without moving graph logic into Electron.
+- [ ] Run type-check, production build, desktop configuration validation, and offline/file-route smoke tests.
+- [ ] Run or confirm the GitHub Actions Windows NSIS build for the current commit and retrieve the installer artifact.
+- [ ] Update README only where needed to document the existing-app desktop behavior and custom-template workflow.
+- [ ] Save a checkpoint and deliver the repository URL and current installer artifact.
 
 ## Constraints
 
-All deterministic templates, search/filtering, and custom-template persistence must work without a network connection. No customer reviews, ratings, or fabricated testimonials are used. Keep the focused desktop-utility visual language: deep graphite workspace, warm paper panels, blue-violet accent, monospace code surfaces, and compact operational controls.
+Do not create a separate static documentation site or move `/docs` out of the existing app. Deterministic graph generation, editing, search, persistence, validation, and `.dyn` export must remain local. LLM mode is opt-in only. Keep the deep graphite workspace, warm paper panels, monospace code surfaces, and compact utility controls.
+
+## Desktop binding note
+
+The project is being verified in the sandbox repository because no Manus Desktop folder is bound. If direct edits on a Windows device are desired later, bind the intended folder before continuing device-local work.
