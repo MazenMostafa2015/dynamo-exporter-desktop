@@ -1,6 +1,6 @@
 # Dynamo Exporter Expansion — Task Checklist
 
-- [ ] Inspect the existing scenario/template types and graph-builder render structure.
+- [x] Inspect the existing scenario/template types and graph-builder render structure.
 - [x] Add deterministic templates for schedules, sheets, parameters, and geometry workflows.
 - [x] Add a template search/filter bar with category chips and custom-template grouping.
 - [x] Add a node search/filter bar with type/category filtering in the node stack.
